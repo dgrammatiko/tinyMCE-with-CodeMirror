@@ -1,32 +1,33 @@
-
 /**
  * source.html
  *
  * Copyright 2013-2014 Web Power, www.webpower.nl
  * @author Arjan Haverkamp
  */
-
+/**
+ * The plugin is modified to reuse the CodeMirror editor that's already distributed with Joomla.
+ * Only TinyMCE >5 is supported.
+ *
+ * By Dimitrios Grammatikogiannis
+ */
 // Global vars:
-var tinymce,     // Reference to TinyMCE
-  editor,      // Reference to TinyMCE editor
-  codemirror,  // CodeMirror instance
-  chr = 0,     // Unused utf-8 character, placeholder for cursor
-  isMac = /macintosh|mac os/i.test(navigator.userAgent),
-  CMsettings;  // CodeMirror settings
+let tinymce;     // Reference to TinyMCE
+let editor;      // Reference to TinyMCE editor
+let codemirror;  // CodeMirror instance
+let chr = 0;     // Unused utf-8 character, placeholder for cursor
+let CMsettings;  // CodeMirror settings
+const isMac = /macintosh|mac os/i.test(navigator.userAgent);
 
-function inArray(key, arr) {
-  "use strict";
-  arr = '|' + arr.join('|') + '|';
-  return arr.indexOf('|'+key+'|') != -1;
-}
-
-(function() {// Initialise (before load)
-  "use strict";
-
+const init = () => {
+  // Initialise (before load)
   tinymce = parent.tinymce;
+  if (!tinymce) {
+    throw new Error('tinymce not found');
+  }
+
   editor = tinymce.activeEditor;
-    var i, userSettings = editor.settings.codemirror;
-    CMsettings = {
+  const userSettings = editor.settings.codemirror;
+  CMsettings = {
     path: '../../codemirror',
     indentOnInit: userSettings.indentOnInit || false,
     disableFilesMerge: false,
@@ -66,20 +67,20 @@ function inArray(key, arr) {
   }
 
   // Merge config
-  for (i in userSettings.config) {
+  for (const i in userSettings.config) {
     CMsettings.config[i] = userSettings.config[i];
   }
 
   // Merge jsFiles
-  for (i in userSettings.jsFiles) {
-    if (!inArray(userSettings.jsFiles[i], CMsettings.jsFiles)) {
+  for (const i in userSettings.jsFiles) {
+    if (!CMsettings.jsFiles.includes(userSettings.jsFiles[i])) {
       CMsettings.jsFiles.push(userSettings.jsFiles[i]);
     }
   }
 
   // Merge cssFiles
-  for (i in userSettings.cssFiles) {
-    if (!inArray(userSettings.cssFiles[i], CMsettings.cssFiles)) {
+  for (const i in userSettings.cssFiles) {
+    if (!CMsettings.cssFiles.includes(userSettings.cssFiles[i])) {
       CMsettings.cssFiles.push(userSettings.cssFiles[i]);
     }
   }
@@ -90,12 +91,12 @@ function inArray(key, arr) {
   }
 
   // Write stylesheets
-  for (i = 0; i < CMsettings.cssFiles.length; i++) {
+  for (let i = 0; i < CMsettings.cssFiles.length; i++) {
     document.write('<li'+'nk rel="stylesheet" type="text/css" href="' + CMsettings.path + CMsettings.cssFiles[i] + '" />');
   }
 
   // Write JS source files
-  for (i = 0; i < CMsettings.jsFiles.length; i++) {
+  for (let i = 0; i < CMsettings.jsFiles.length; i++) {
     document.write('<scr'+'ipt type="text/javascript" src="' + CMsettings.path + CMsettings.jsFiles[i] + '"></scr'+'ipt>');
   }
 
@@ -105,31 +106,29 @@ function inArray(key, arr) {
     if(CMsettings.config.theme) {
       document.documentElement.className += CMsettings.config.theme.replace(/(^|\s)\s*/g, " cm-s-");
     }
-
+console.log(CMsettings);
   window.onload = start;
-}());
+};
 
-function start()
-{// Initialise (on load)
-  "use strict";
-
+const start = () => {
+  // Initialise (on load)
   if (typeof(window.CodeMirror) !== 'function') {
     alert('CodeMirror not found in "' + CMsettings.path + '", aborting...');
     return;
   }
 
   // Create legend for keyboard shortcuts for find & replace:
-  var head = parent.document.querySelectorAll((tinymce.majorVersion < 5) ? '.mce-foot': '.tox-dialog__footer')[0],
-    div = parent.document.createElement('div'),
-    td1 = '<td style="font-size:11px;background:#777;color:#fff;padding:0 4px">',
-    td2 = '<td style="font-size:11px;padding-right:5px">';
+  const head = parent.document.querySelectorAll((tinymce.majorVersion < 5) ? '.mce-foot': '.tox-dialog__footer')[0];
+  const div = parent.document.createElement('div');
+  const td1 = '<td style="font-size:11px;background:#777;color:#fff;padding:0 4px">';
+  const td2 = '<td style="font-size:11px;padding-right:5px">';
   div.innerHTML = '<table cellspacing="0" cellpadding="0" style="border-spacing:4px"><tr>' + td1 + (isMac ? '&#8984;-F' : 'Ctrl-F</td>') + td2 + tinymce.translate('Start search') + '</td>' + td1 + (isMac ? '&#8984;-G' : 'Ctrl-G') + '</td>' + td2 + tinymce.translate('Find next') + '</td>' + td1 + (isMac ? '&#8984;-Alt-F' : 'Shift-Ctrl-F') + '</td>' + td2 + tinymce.translate('Find previous') + '</td></tr>' + '<tr>' + td1 + (isMac ? '&#8984;-Alt-F' : 'Shift-Ctrl-F') + '</td>' + td2 + tinymce.translate('Replace') + '</td>' + td1 + (isMac ? 'Shift-&#8984;-Alt-F' : 'Shift-Ctrl-R') +'</td>' + td2 + tinymce.translate('Replace all') + '</td></tr></table>';
   div.style.position = 'absolute';
   div.style.left = div.style.bottom = '5px';
   head.appendChild(div);
 
   // Set CodeMirror cursor and bookmark to same position as cursor was in TinyMCE:
-  var html = editor.getContent({source_view: true});
+  let html = editor.getContent({source_view: true});
 
     // [FIX] #6 z-index issue with table panel and source code dialog
     //  editor.selection.getBookmark();
@@ -137,15 +136,14 @@ function start()
   html = html.replace(/<span\s+style="display: none;"\s+class="CmCaReT"([^>]*)>([^<]*)<\/span>/gm, String.fromCharCode(chr));
   editor.dom.remove(editor.dom.select('.CmCaReT'));
 
-    // Hide TinyMCE toolbar panels, [FIX] #6 z-index issue with table panel and source code dialog
-    // https://github.com/christiaan/tinymce-codemirror/issues/6
-    tinymce.each(editor.contextToolbars, function(toolbar) { if (toolbar.panel) { toolbar.panel.hide(); } });
+  // Hide TinyMCE toolbar panels, [FIX] #6 z-index issue with table panel and source code dialog
+  // https://github.com/christiaan/tinymce-codemirror/issues/6
+  tinymce.each(editor.contextToolbars, (toolbar) => { if (toolbar.panel) { toolbar.panel.hide(); } });
 
-  CodeMirror.defineInitHook(function(inst)
-  {
+  CodeMirror.defineInitHook((inst) => {
     // Move cursor to correct position:
     inst.focus();
-    var cursor = inst.getSearchCursor(String.fromCharCode(chr), false);
+    const cursor = inst.getSearchCursor(String.fromCharCode(chr), false);
     if (cursor.findNext()) {
       inst.setCursor(cursor.to());
       cursor.replace('');
@@ -153,9 +151,9 @@ function start()
 
     // Indent all code, if so requested:
     if (editor.settings.codemirror.indentOnInit) {
-      var last = inst.lineCount();
+      const last = inst.lineCount();
       inst.operation(function() {
-        for (var i = 0; i < last; ++i) {
+        for (let i = 0; i < last; ++i) {
           inst.indentLine(i);
         }
       });
@@ -167,17 +165,15 @@ function start()
   // Instantiante CodeMirror:
   codemirror = CodeMirror(document.body, CMsettings.config);
   codemirror.isDirty = false;
-  codemirror.on('change', function(inst) {
+  codemirror.on('change', (inst) => {
     inst.isDirty = true;
   });
 }
 
-function findDepth(haystack, needle)
-{
-  "use strict";
-
-  var idx = haystack.indexOf(needle), depth = 0, x;
-  for (x = idx -1; x >= 0; x--) {
+const findDepth = (haystack, needle) => {
+  const idx = haystack.indexOf(needle);
+  let depth = 0;
+  for (let x = idx -1; x >= 0; x--) {
     switch(haystack.charAt(x)) {
       case '<': depth--; break;
       case '>': depth++; break;
@@ -188,11 +184,10 @@ function findDepth(haystack, needle)
 }
 
 // This function is called by plugin.js, when user clicks 'Ok' button
-function submit()
-{
-  "use strict";
-
-  var cc = '&#x0;', isDirty = codemirror.isDirty, doc = codemirror.doc;
+window.submit = () => {
+  const cc = '&#x0;';
+  const isDirty = codemirror.isDirty;
+  const doc = codemirror.doc;
 
   if (doc.somethingSelected()) {
     // Clear selection:
@@ -214,26 +209,23 @@ function submit()
   // Submit HTML to TinyMCE:
   // [FIX] Cursor position inside JS, style or &nbps;
   // Workaround to fix cursor position if inside script tag
-  var code = codemirror.getValue();
+  const code = codemirror.getValue();
 
   /* Regex to check if inside script or style tags */
-  var ccScript = new RegExp("<script(.*?)>(.*?)" + cc + "(.*?)<\/script>", "ms");
-  var ccStyle = new RegExp("<style(.*?)>(.*?)" + cc + "(.*?)<\/style>", "ms");
+  const ccScript = new RegExp("<script(.*?)>(.*?)" + cc + "(.*?)<\/script>", "ms");
+  const ccStyle = new RegExp("<style(.*?)>(.*?)" + cc + "(.*?)<\/style>", "ms");
 
   /* Regex to check if in beginning or end or if between < & > */
-  var ccLocationCheck = new RegExp("<[^>]*(" + cc + ").*>|^(" + cc + ")|(" + cc + ")$");
+  const ccLocationCheck = new RegExp("<[^>]*(" + cc + ").*>|^(" + cc + ")|(" + cc + ")$");
 
   if (
     code.search(ccScript) !== -1 ||
     code.search(ccStyle) !== -1 ||
     code.search(ccLocationCheck) !== -1
-  )
-  {
+  ){
     editor.setContent(code.replace(cc, ''));
-  }
-  else
-  {
-      editor.setContent(code.replace(cc, '<span id="CmCaReT"></span>'));
+  } else {
+    editor.setContent(code.replace(cc, '<span id="CmCaReT"></span>'));
   }
 
   editor.isNotDirty = !isDirty;
@@ -250,15 +242,16 @@ function submit()
   }
 }
 
-document.onkeydown = function (evt)
-{
-    evt = evt || window.event;
-    var isEscape = false;
-    if ("key" in evt)
-        isEscape = (evt.key === "Escape" || evt.key === "Esc");
-    else
-        isEscape = (evt.keyCode === 27);
+document.onkeydown = (evt) => {
+  evt = evt || window.event;
+  let isEscape = false;
+  if ("key" in evt)
+    isEscape = (evt.key === "Escape" || evt.key === "Esc");
+  else
+    isEscape = (evt.keyCode === 27);
 
-    if (isEscape)
-        tinymce.activeEditor.windowManager.close();
+  if (isEscape)
+    tinymce.activeEditor.windowManager.close();
 };
+
+init();
