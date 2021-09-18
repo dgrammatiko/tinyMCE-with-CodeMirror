@@ -22,6 +22,6 @@ Enjoy!
 
 
 ## Commands
-- `npx terser --compress --mangle -- codemirror/plugin.js` will minify the plugin.js
+- `npx terser --compress --mangle -- src/plugin.js` will minify the plugin.js
 - `npx terser --compress --mangle -- src/source.js` will minify the iframe js
 - `npx css-minify -f src/source.css` will minify the iframe css
