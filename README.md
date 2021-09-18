@@ -1,5 +1,5 @@
 # tinyMCE-with-CodeMirror
-Plugin that will highlight the source code on tinyMCE
+A Joomla 4 TinyMCE plugin that will highlight the source code on tinyMCE
 
 
 ## Installation
