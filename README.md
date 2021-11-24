@@ -1,6 +1,7 @@
 # tinyMCE-with-CodeMirror
 A Joomla 4 TinyMCE plugin that will highlight the source code on tinyMCE
 
+# This is part of Joomla since https://github.com/joomla/joomla-cms/pull/35647
 
 ## Installation
 - Upload the ttc.zip file into you server under `media/vendor`
